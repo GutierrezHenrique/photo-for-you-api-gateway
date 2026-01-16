@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import * as compression from 'compression';
-import { HttpService } from '@nestjs/axios';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,7 +11,6 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const httpService = app.get(HttpService);
 
   // Middleware para capturar OAuth callbacks ANTES do prefixo global
   // IMPORTANTE: O Passport precisa processar a sessão diretamente no auth-service
@@ -21,12 +19,19 @@ async function bootstrap() {
     if (req.method === 'GET') {
       console.log('OAuth callback recebido no gateway:', req.url);
       const queryString = new URLSearchParams(req.query as any).toString();
-      const authServiceUrl = configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
-      
+      const authServiceUrl =
+        configService.get<string>('AUTH_SERVICE_URL') ||
+        'http://localhost:3001';
+
       // Redirecionar diretamente para o auth-service
       // O Passport precisa processar a sessão OAuth diretamente
-      console.log('Redirecionando para auth-service:', `${authServiceUrl}/auth/google/callback?${queryString}`);
-      return res.redirect(`${authServiceUrl}/auth/google/callback?${queryString}`);
+      console.log(
+        'Redirecionando para auth-service:',
+        `${authServiceUrl}/auth/google/callback?${queryString}`,
+      );
+      return res.redirect(
+        `${authServiceUrl}/auth/google/callback?${queryString}`,
+      );
     }
     next();
   });
@@ -95,7 +100,9 @@ async function bootstrap() {
   );
 
   // Body parser size limit (10MB for file uploads)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   app.use(require('express').json({ limit: '10mb' }));
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 
   const port = configService.get('PORT') || 3000;
@@ -103,8 +110,12 @@ async function bootstrap() {
 
   console.log(`🚀 API Gateway running on: http://localhost:${port}`);
   console.log(`📡 Auth Service: ${configService.get('AUTH_SERVICE_URL')}`);
-  console.log(`🖼️  Gallery Service: ${configService.get('GALLERY_SERVICE_URL')}`);
-  console.log(`🔔 Notification Service: ${configService.get('NOTIFICATION_SERVICE_URL')}`);
+  console.log(
+    `🖼️  Gallery Service: ${configService.get('GALLERY_SERVICE_URL')}`,
+  );
+  console.log(
+    `🔔 Notification Service: ${configService.get('NOTIFICATION_SERVICE_URL')}`,
+  );
   console.log(`Environment: ${configService.get('NODE_ENV') || 'development'}`);
 }
 

@@ -11,12 +11,10 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProxyService } from '../proxy.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
-import { Request } from 'express';
 
 @Controller('albums')
 export class GalleryProxyController {
@@ -24,10 +22,7 @@ export class GalleryProxyController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAlbums(
-    @Headers('authorization') auth: string,
-    @Query() query: any,
-  ) {
+  async getAlbums(@Headers('authorization') auth: string, @Query() query: any) {
     return this.proxyService.proxyToGalleryService(
       'GET',
       '/albums',
@@ -39,16 +34,10 @@ export class GalleryProxyController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createAlbum(
-    @Body() body: any,
-    @Headers('authorization') auth: string,
-  ) {
-    return this.proxyService.proxyToGalleryService(
-      'POST',
-      '/albums',
-      body,
-      { Authorization: auth },
-    );
+  async createAlbum(@Body() body: any, @Headers('authorization') auth: string) {
+    return this.proxyService.proxyToGalleryService('POST', '/albums', body, {
+      Authorization: auth,
+    });
   }
 
   @Get(':id')
@@ -126,23 +115,24 @@ export class GalleryProxyController {
     @Body() body: any,
     @UploadedFile() file: Express.Multer.File,
     @Headers('authorization') auth: string,
-    @Req() req: Request,
   ) {
     // For file uploads, forward the multipart/form-data directly
     // We'll use the raw body and forward headers
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const FormData = require('form-data');
     const formData = new FormData();
-    
+
     if (file) {
       formData.append('file', file.buffer, {
         filename: file.originalname,
         contentType: file.mimetype,
       });
     }
-    
+
     if (body.title) formData.append('title', body.title);
     if (body.description) formData.append('description', body.description);
-    if (body.acquisitionDate) formData.append('acquisitionDate', body.acquisitionDate);
+    if (body.acquisitionDate)
+      formData.append('acquisitionDate', body.acquisitionDate);
 
     return this.proxyService.proxyToGalleryService(
       'POST',

@@ -16,7 +16,9 @@ export class JwtAuthGuard implements CanActivate {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.authServiceUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
+    this.authServiceUrl =
+      this.configService.get<string>('AUTH_SERVICE_URL') ||
+      'http://localhost:3001';
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,7 +26,9 @@ export class JwtAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid authorization header');
+      throw new UnauthorizedException(
+        'Missing or invalid authorization header',
+      );
     }
 
     const token = authHeader.replace('Bearer ', '');

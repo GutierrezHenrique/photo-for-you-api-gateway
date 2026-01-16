@@ -33,17 +33,29 @@ export class AuthProxyController {
 
   @Post('forgot-password')
   async forgotPassword(@Body() body: any) {
-    return this.proxyService.proxyToAuthService('POST', '/auth/forgot-password', body);
+    return this.proxyService.proxyToAuthService(
+      'POST',
+      '/auth/forgot-password',
+      body,
+    );
   }
 
   @Post('reset-password')
   async resetPassword(@Body() body: any) {
-    return this.proxyService.proxyToAuthService('POST', '/auth/reset-password', body);
+    return this.proxyService.proxyToAuthService(
+      'POST',
+      '/auth/reset-password',
+      body,
+    );
   }
 
   @Post('verify-email')
   async verifyEmail(@Body() body: any) {
-    return this.proxyService.proxyToAuthService('POST', '/auth/verify-email', body);
+    return this.proxyService.proxyToAuthService(
+      'POST',
+      '/auth/verify-email',
+      body,
+    );
   }
 
   @Post('refresh')
@@ -65,16 +77,21 @@ export class AuthProxyController {
 
   @Get('google')
   async googleAuth(@Res() res: Response) {
-    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+    const authServiceUrl =
+      process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
     res.redirect(`${authServiceUrl}/auth/google`);
   }
 
   @Get('google/callback')
-  async googleAuthCallback(@Query() query: any, @Res() res: Response, @Request() req: any) {
+  async googleAuthCallback(
+    @Query() query: any,
+    @Res() res: Response,
+    @Request() req: any,
+  ) {
     // Para OAuth, o Passport precisa processar a sessão diretamente
     // Fazer proxy HTTP e capturar redirects
     const queryString = new URLSearchParams(query).toString();
-    
+
     try {
       // Fazer proxy da requisição
       const response = await this.proxyService.proxyToAuthService(
@@ -86,12 +103,17 @@ export class AuthProxyController {
           'User-Agent': req.headers['user-agent'] || '',
         },
       );
-      
+
       // Se a resposta contém um redirect, seguir o redirect
-      if (response && typeof response === 'object' && response.redirect && response.location) {
+      if (
+        response &&
+        typeof response === 'object' &&
+        response.redirect &&
+        response.location
+      ) {
         return res.redirect(response.location);
       }
-      
+
       return res.json(response);
     } catch (error: any) {
       // Se houver erro, verificar se é um redirect (status 302)
@@ -101,16 +123,23 @@ export class AuthProxyController {
           return res.redirect(location);
         }
       }
-      
+
       // Fallback: redirect direto para o auth-service
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
-      return res.redirect(`${authServiceUrl}/auth/google/callback?${queryString}`);
+      const authServiceUrl =
+        process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+      return res.redirect(
+        `${authServiceUrl}/auth/google/callback?${queryString}`,
+      );
     }
   }
 
   @Post('google/login')
   async googleLogin(@Body() body: any) {
-    return this.proxyService.proxyToAuthService('POST', '/auth/google/login', body);
+    return this.proxyService.proxyToAuthService(
+      'POST',
+      '/auth/google/login',
+      body,
+    );
   }
 }
 
@@ -121,26 +150,17 @@ export class UsersProxyController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getMe(@Headers('authorization') auth: string) {
-    return this.proxyService.proxyToAuthService(
-      'GET',
-      '/users/me',
-      undefined,
-      { Authorization: auth },
-    );
+    return this.proxyService.proxyToAuthService('GET', '/users/me', undefined, {
+      Authorization: auth,
+    });
   }
 
   @Patch('me')
   @UseGuards(JwtAuthGuard)
-  async updateMe(
-    @Body() body: any,
-    @Headers('authorization') auth: string,
-  ) {
-    return this.proxyService.proxyToAuthService(
-      'PATCH',
-      '/users/me',
-      body,
-      { Authorization: auth },
-    );
+  async updateMe(@Body() body: any, @Headers('authorization') auth: string) {
+    return this.proxyService.proxyToAuthService('PATCH', '/users/me', body, {
+      Authorization: auth,
+    });
   }
 
   @Patch('me/password')

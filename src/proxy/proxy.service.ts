@@ -14,9 +14,15 @@ export class ProxyService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.authServiceUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
-    this.galleryServiceUrl = this.configService.get<string>('GALLERY_SERVICE_URL') || 'http://localhost:3002';
-    this.notificationServiceUrl = this.configService.get<string>('NOTIFICATION_SERVICE_URL') || 'http://localhost:3003';
+    this.authServiceUrl =
+      this.configService.get<string>('AUTH_SERVICE_URL') ||
+      'http://localhost:3001';
+    this.galleryServiceUrl =
+      this.configService.get<string>('GALLERY_SERVICE_URL') ||
+      'http://localhost:3002';
+    this.notificationServiceUrl =
+      this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
+      'http://localhost:3003';
   }
 
   async proxyToAuthService(
@@ -26,7 +32,14 @@ export class ProxyService {
     headers?: Record<string, string>,
     params?: any,
   ): Promise<any> {
-    return this.proxyRequest(this.authServiceUrl, method, path, data, headers, params);
+    return this.proxyRequest(
+      this.authServiceUrl,
+      method,
+      path,
+      data,
+      headers,
+      params,
+    );
   }
 
   async proxyToGalleryService(
@@ -36,7 +49,14 @@ export class ProxyService {
     headers?: Record<string, string>,
     params?: any,
   ): Promise<any> {
-    return this.proxyRequest(this.galleryServiceUrl, method, path, data, headers, params);
+    return this.proxyRequest(
+      this.galleryServiceUrl,
+      method,
+      path,
+      data,
+      headers,
+      params,
+    );
   }
 
   async proxyToNotificationService(
@@ -46,7 +66,14 @@ export class ProxyService {
     headers?: Record<string, string>,
     params?: any,
   ): Promise<any> {
-    return this.proxyRequest(this.notificationServiceUrl, method, path, data, headers, params);
+    return this.proxyRequest(
+      this.notificationServiceUrl,
+      method,
+      path,
+      data,
+      headers,
+      params,
+    );
   }
 
   private async proxyRequest(
@@ -68,7 +95,8 @@ export class ProxyService {
       params,
       timeout: 30000, // 30 seconds
       maxRedirects: 0, // Não seguir redirects automaticamente
-      validateStatus: (status) => status < 400 || status === 302 || status === 301,
+      validateStatus: (status) =>
+        status < 400 || status === 302 || status === 301,
     };
 
     // Add data for POST, PUT, PATCH
@@ -80,22 +108,28 @@ export class ProxyService {
       const response: AxiosResponse = await firstValueFrom(
         this.httpService.request(config),
       );
-      
+
       // Se for um redirect, retornar a localização
-      if ((response.status === 302 || response.status === 301) && response.headers.location) {
+      if (
+        (response.status === 302 || response.status === 301) &&
+        response.headers.location
+      ) {
         return { location: response.headers.location, redirect: true };
       }
-      
+
       return response.data;
     } catch (error: any) {
       // Se for um redirect (status 302/301), retornar a localização
-      if (error.response && (error.response.status === 302 || error.response.status === 301)) {
+      if (
+        error.response &&
+        (error.response.status === 302 || error.response.status === 301)
+      ) {
         const location = error.response.headers?.location;
         if (location) {
           return { location, redirect: true };
         }
       }
-      
+
       if (error.response) {
         // Service responded with error
         throw new HttpException(
