@@ -89,7 +89,7 @@ export class ProxyService {
       method: method as any,
       url,
       headers: {
-        ...(method.toUpperCase() !== 'GET' && {
+        ...(method.toUpperCase() !== 'GET' && data && {
           'Content-Type': 'application/json',
         }),
         ...headers,
@@ -102,8 +102,8 @@ export class ProxyService {
       withCredentials: true, // Suportar cookies para OAuth
     };
 
-    // Add data for POST, PUT, PATCH
-    if (['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) && data) {
+    // Add data for POST, PUT, PATCH, DELETE (DELETE can have body for batch operations)
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase()) && data) {
       config.data = data;
     }
 
