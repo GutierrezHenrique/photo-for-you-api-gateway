@@ -160,6 +160,21 @@ export class GalleryProxyController {
     );
   }
 
+  @Delete(':albumId/photos/batch')
+  @UseGuards(JwtAuthGuard)
+  async deletePhotos(
+    @Param('albumId') albumId: string,
+    @Body() body: any,
+    @Headers('authorization') auth: string,
+  ) {
+    return this.proxyService.proxyToGalleryService(
+      'DELETE',
+      `/albums/${albumId}/photos/batch`,
+      body,
+      { Authorization: auth },
+    );
+  }
+
   @Delete(':albumId/photos/:id')
   @UseGuards(JwtAuthGuard)
   async deletePhoto(
