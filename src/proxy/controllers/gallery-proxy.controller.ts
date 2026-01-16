@@ -13,7 +13,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import FormData from 'form-data';
+import * as FormData from 'form-data';
 import { ProxyService } from '../proxy.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
