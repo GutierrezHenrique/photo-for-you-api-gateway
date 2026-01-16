@@ -13,30 +13,6 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  // Middleware para capturar OAuth callbacks ANTES do prefixo global
-  // IMPORTANTE: O Passport precisa processar a sessão diretamente no auth-service
-  // Por isso fazemos redirect em vez de proxy HTTP
-  app.use('/auth/google/callback', async (req: any, res: any, next: any) => {
-    if (req.method === 'GET') {
-      console.log('OAuth callback recebido no gateway:', req.url);
-      const queryString = new URLSearchParams(req.query as any).toString();
-      const authServiceUrl =
-        configService.get<string>('AUTH_SERVICE_URL') ||
-        'http://localhost:3001';
-
-      // Redirecionar diretamente para o auth-service
-      // O Passport precisa processar a sessão OAuth diretamente
-      console.log(
-        'Redirecionando para auth-service:',
-        `${authServiceUrl}/auth/google/callback?${queryString}`,
-      );
-      return res.redirect(
-        `${authServiceUrl}/auth/google/callback?${queryString}`,
-      );
-    }
-    next();
-  });
-
   // Set global prefix
   app.setGlobalPrefix('api');
 

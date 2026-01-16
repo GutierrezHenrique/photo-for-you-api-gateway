@@ -89,7 +89,9 @@ export class ProxyService {
       method: method as any,
       url,
       headers: {
-        'Content-Type': 'application/json',
+        ...(method.toUpperCase() !== 'GET' && {
+          'Content-Type': 'application/json',
+        }),
         ...headers,
       },
       params,
@@ -97,6 +99,7 @@ export class ProxyService {
       maxRedirects: 0, // Não seguir redirects automaticamente
       validateStatus: (status) =>
         status < 400 || status === 302 || status === 301,
+      withCredentials: true, // Suportar cookies para OAuth
     };
 
     // Add data for POST, PUT, PATCH

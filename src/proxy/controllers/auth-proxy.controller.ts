@@ -76,27 +76,12 @@ export class AuthProxyController {
   }
 
   @Get('google')
-  async googleAuth(@Res() res: Response) {
-    const authServiceUrl =
-      process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
-    res.redirect(`${authServiceUrl}/auth/google`);
-  }
-
-  @Get('google/callback')
-  async googleAuthCallback(
-    @Query() query: any,
-    @Res() res: Response,
-    @Request() req: any,
-  ) {
-    // Para OAuth, o Passport precisa processar a sessão diretamente
-    // Fazer proxy HTTP e capturar redirects
-    const queryString = new URLSearchParams(query).toString();
-
+  async googleAuth(@Res() res: Response, @Request() req: any) {
     try {
-      // Fazer proxy da requisição
+      // Fazer proxy para o auth-service e capturar o redirect do Google OAuth
       const response = await this.proxyService.proxyToAuthService(
         'GET',
-        `/auth/google/callback?${queryString}`,
+        '/auth/google',
         undefined,
         {
           Cookie: req.headers.cookie || '',
@@ -104,7 +89,7 @@ export class AuthProxyController {
         },
       );
 
-      // Se a resposta contém um redirect, seguir o redirect
+      // Se a resposta contém um redirect (para o Google OAuth), seguir o redirect
       if (
         response &&
         typeof response === 'object' &&
@@ -124,12 +109,54 @@ export class AuthProxyController {
         }
       }
 
-      // Fallback: redirect direto para o auth-service
-      const authServiceUrl =
-        process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
-      return res.redirect(
-        `${authServiceUrl}/auth/google/callback?${queryString}`,
+      // Se não conseguir fazer proxy, retornar erro
+      throw error;
+    }
+  }
+
+  @Get('google/callback')
+  async googleAuthCallback(
+    @Query() query: any,
+    @Res() res: Response,
+    @Request() req: any,
+  ) {
+    // Fazer proxy HTTP e capturar redirects para o frontend
+    const queryString = new URLSearchParams(query).toString();
+
+    try {
+      // Fazer proxy da requisição para o auth-service
+      const response = await this.proxyService.proxyToAuthService(
+        'GET',
+        `/auth/google/callback?${queryString}`,
+        undefined,
+        {
+          Cookie: req.headers.cookie || '',
+          'User-Agent': req.headers['user-agent'] || '',
+        },
       );
+
+      // Se a resposta contém um redirect (para o frontend), seguir o redirect
+      if (
+        response &&
+        typeof response === 'object' &&
+        response.redirect &&
+        response.location
+      ) {
+        return res.redirect(response.location);
+      }
+
+      return res.json(response);
+    } catch (error: any) {
+      // Se houver erro, verificar se é um redirect (status 302)
+      if (error.response?.status === 302 || error.response?.status === 301) {
+        const location = error.response.headers?.location;
+        if (location) {
+          return res.redirect(location);
+        }
+      }
+
+      // Se não conseguir fazer proxy, retornar erro
+      throw error;
     }
   }
 
