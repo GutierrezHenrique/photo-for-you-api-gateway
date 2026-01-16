@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -100,10 +101,8 @@ async function bootstrap() {
   );
 
   // Body parser size limit (10MB for file uploads)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  app.use(require('express').json({ limit: '10mb' }));
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   const port = configService.get('PORT') || 3000;
   await app.listen(port);
