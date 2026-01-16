@@ -48,7 +48,7 @@ export class JwtAuthGuard implements CanActivate {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 5000,
+            timeout: 10000, // Aumentar timeout para 10s
           },
         ),
       );
@@ -64,18 +64,37 @@ export class JwtAuthGuard implements CanActivate {
     } catch (error: any) {
       // Log do erro para debug
       if (error.response) {
-        console.error('Auth validation error:', {
-          status: error.response.status,
-          data: error.response.data,
+        console.error('Auth validation error (response):', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
           url: `${this.authServiceUrl}/auth/validate`,
         });
+        
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          throw new UnauthorizedException('Invalid or expired token');
+        }
       } else if (error.request) {
-        console.error('Auth service unavailable:', this.authServiceUrl);
+        console.error('Auth service unavailable (no response):', {
+          url: `${this.authServiceUrl}/auth/validate`,
+          message: error.message,
+          code: error.code,
+        });
+      } else {
+        console.error('Auth validation error (other):', {
+          message: error.message,
+          stack: error.stack,
+          url: `${this.authServiceUrl}/auth/validate`,
+        });
       }
 
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        throw new UnauthorizedException('Invalid or expired token');
+      // Se for erro de conexão/timeout, retornar erro mais específico
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+        throw new UnauthorizedException(
+          `Authentication service unavailable: ${error.message || 'Connection failed'}`,
+        );
       }
+
       throw new UnauthorizedException('Authentication failed');
     }
   }
