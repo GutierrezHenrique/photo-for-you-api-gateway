@@ -13,6 +13,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import FormData from 'form-data';
 import { ProxyService } from '../proxy.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
@@ -118,8 +119,6 @@ export class GalleryProxyController {
   ) {
     // For file uploads, forward the multipart/form-data directly
     // We'll use the raw body and forward headers
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const FormData = require('form-data');
     const formData = new FormData();
 
     if (file) {
